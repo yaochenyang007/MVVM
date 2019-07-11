@@ -1,5 +1,5 @@
 # MVVM
-<!-- [![NPM version](https://img.shields.io/npm/v/buejs.svg)](https://npmjs.org/package/buejs) -->
+<!-- [![NPM version](https://npmjs.org/package/MVVM-ES6)](https://npmjs.org/package/MVVM-ES6) -->
 > 自己写的`MVVM`框架, [Demo](https://github.com/yaochenyang007/MVVM)
 ## 注意：此项目仅供学习使用。
 
@@ -13,11 +13,6 @@
  - [x] Object.defineProperty数据劫持
 
 
-<!-- ## 安装
- - 使用 npm
-``` bash
-npm i buejs
-``` -->
  - 引入js
 ``` html
 <script src="./js/mvvm.js"></script>
@@ -422,7 +417,7 @@ class MVVM {
 ### 总结
 本文主要围绕“实现Observer”、“实现Compile”、“实现Watcher”、“实现MVVM”，来实现MVVM原理
 
-[img1]: ./img/mvvm.gif
+[img1]: ./img/mvvm-b.gif
 
 
 
