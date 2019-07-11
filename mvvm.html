@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MVVM-ES6</title>
+</head>
+<style> 
+    #app{
+        text-align: center;
+        padding:100px;
+    }
+    .input{
+        width: 50%;
+    }
+   
+</style>
+<body>
+
+<div id="app">
+    <input class="input" type="text" v-model="school.name">
+    <p>{{school.name}}</p>
+    <!-- <p>{{school.age}}</p> -->
+    {{getyaochenyang}}
+    <button v-on:click="clickBtn">更新数据</button>
+    <div v-html="message"></div>
+</div>
+<script src="./js/mvvm.js"></script>
+<script>
+    var vm = new MVVM({
+        el: '#app',
+        data: {
+            school: {
+                name:'ycy',
+                age:'25'
+            },
+            message:'<h1>ycy</h1>'
+        },
+        computed: {
+            getyaochenyang:function(){
+                return this.school.name + '-https://yaochenyang.xin'; 
+            }
+        },
+        methods: {
+            clickBtn: function(e) {
+                this.school.name = "https://github.com/yaochenyang007"
+            }
+        }
+    });
+
+</script>
+
+</body>
+</html>
