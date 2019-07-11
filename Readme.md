@@ -4,13 +4,13 @@
 ## 注意：此项目仅供学习使用。
 
 ## Todos
- - [x] 事件绑定
  - [x] 双向绑定
- - [x] 计算属性
  - [x] 事件绑定
+ - [x] 计算属性
+ - [x] 自定义指令
  - [x] ES6语法
  - [x] 正则表达式
- - [x] Object.defineProperty数据劫持
+ - [x] Object.defineProperty
 
 
  - 引入js
@@ -124,9 +124,7 @@ class Dep {
 
 
 ### 2、实现Compile
-compile主要做的事情是解析模板指令，将模板中的变量替换成数据，然后初始化渲染页面视图，并将每个指令对应的节点绑定更新函数，添加监听数据的订阅者，一旦数据有变动，收到通知，更新视图，如图所示：
-
-因为遍历解析的过程有多次操作dom节点，为提高性能和效率，会先将vue实例根节点的`el`转换成文档碎片`fragment`进行解析编译操作，解析完成，再将`fragment`添加回原来的真实dom节点中
+compile主要做的事情是解析模板指令，将模板中的变量替换成数据，然后初始化渲染页面视图，并将每个指令对应的节点绑定更新函数，添加监听数据的订阅者，一旦数据有变动，收到通知，更新视图，因为遍历解析的过程有多次操作dom节点，为提高性能和效率，会先将vue实例根节点的`el`转换成文档碎片`fragment`进行解析编译操作，解析完成，再将`fragment`添加回原来的真实dom节点中
 
 ```javascript
 //编译器
@@ -216,76 +214,99 @@ class Compiler {
 compileElement方法将遍历所有节点及其子节点，进行扫描解析编译，调用对应的指令渲染函数进行数据渲染，并调用对应的指令更新函数进行绑定，详看代码及注释说明：
 
 ```javascript
-Compile.prototype = {
-	// ... 省略
-	compileElement: function(el) {
-        var childNodes = el.childNodes, me = this;
-        [].slice.call(childNodes).forEach(function(node) {
-            var text = node.textContent;
-            var reg = /\{\{(.*)\}\}/;	// 表达式文本
-            // 按元素节点方式编译
-            if (me.isElementNode(node)) {
-                me.compile(node);
-            } else if (me.isTextNode(node) && reg.test(text)) {
-                me.compileText(node, RegExp.$1);
-            }
-            // 遍历编译子节点
-            if (node.childNodes && node.childNodes.length) {
-                me.compileElement(node);
-            }
-        });
+CompileUtil = {
+    //根据表达式取到对应的值
+    getVal(vm, expr) { // vm.$data   'school.name'
+
+        return expr.trim().split('.').reduce((data, current) => {
+            //console.log(data,current)
+            return data[current];
+        }, vm.$data)
     },
+    setValue(vm, expr, value) {
 
-    compile: function(node) {
-        var nodeAttrs = node.attributes, me = this;
-        [].slice.call(nodeAttrs).forEach(function(attr) {
-            // 规定：指令以 v-xxx 命名
-            // 如 <span v-text="content"></span> 中指令为 v-text
-            var attrName = attr.name;	// v-text
-            if (me.isDirective(attrName)) {
-                var exp = attr.value; // content
-                var dir = attrName.substring(2);	// text
-                if (me.isEventDirective(dir)) {
-                	// 事件指令, 如 v-on:click
-                    compileUtil.eventHandler(node, me.$vm, exp, dir);
-                } else {
-                	// 普通指令
-                    compileUtil[dir] && compileUtil[dir](node, me.$vm, exp);
-                }
+        return expr.trim().split('.').reduce((data, current, index, arr) => {
+            console.log(arr)
+            if (index == arr.length - 1) {
+                return data[current] = value
             }
-        });
-    }
-};
 
-// 指令处理集合
-var compileUtil = {
-    text: function(node, vm, exp) {
-        this.bind(node, vm, exp, 'text');
+            return data[current]
+
+        }, vm.$data)
     },
-    // ...省略
-    bind: function(node, vm, exp, dir) {
-        var updaterFn = updater[dir + 'Updater'];
-        // 第一次初始化视图
-        updaterFn && updaterFn(node, vm[exp]);
-        // 实例化订阅者，此操作会在对应的属性消息订阅器中添加了该订阅者watcher
-        new Watcher(vm, exp, function(value, oldValue) {
-        	// 一旦属性值有变化，会收到通知执行此更新函数，更新视图
-            updaterFn && updaterFn(node, value, oldValue);
-        });
-    }
-};
+    model(node, expr, vm) { //node为节点， expr为表达式，vm是当前实例
+        //给输入框赋予value属性  node.value = xxx
+        let fn = this.updater['modelUpdater'];
+        //console.log(expr)
+        new Watcher(vm, expr, (newVal) => {   //给输入框加一个观察者，如果数据更新了会触发此方法，会拿新值给输入框赋值
+            fn(node, newVal)
+        })
+        node.addEventListener('input', (e) => {
+            let value = e.target.value;
+            console.log(value)
+            console.log(this.setValue(vm, expr, value))
+            this.setValue(vm, expr, value);
+        })
+        let value = this.getVal(vm, expr);
+        console.log(value)
+        fn(node, value)
+    },
+    html(node, expr, vm) {
+        //给输入框赋予value属性  node.value = xxx
+        let fn = this.updater['htmlUpdater'];
+        new Watcher(vm, expr, (newVal) => {   //给输入框加一个观察者，如果数据更新了会触发此方法，会拿新值给输入框赋值
+            fn(node, newVal)
+        })
 
-// 更新函数
-var updater = {
-    textUpdater: function(node, value) {
-        node.textContent = typeof value == 'undefined' ? '' : value;
+        let value = this.getVal(vm, expr);
+        fn(node, value)
+
+    },
+    getContentValue(node, expr) {
+        //遍历表达式，讲内容重新替换成一个完整内容，返还回去
+        return expr.replace(/\{\{(.+?)\}\}/g, (...args) => {
+            return this.getVal(vm, args[1]);
+        })
+    },
+    on(node, expr, vm, eventName) {
+        node.addEventListener(eventName, (e) => {
+            // alert("44445");
+            vm[expr].call(vm, e);
+        })
+    },
+    //处理文本节点
+    text(node, expr, vm) {  // expr => {{school.name}} {{b}}
+        //console.log(expr)
+        let fn = this.updater['textUpdater'];
+        let content = expr.replace(/\{\{(.+?)\}\}/g, (...args) => {
+
+            //给表达式每 {{}} 都加上观察者
+            new Watcher(vm, args[1], () => {
+                fn(node, this.getContentValue(vm, expr)); // 返回了一个全字符串
+            })
+            return this.getVal(vm, args[1]);
+        })
+        // textUpdater
+        fn(node, content)
+    },
+    updater: {
+        modelUpdater(node, value) {
+            node.value = value;
+        },
+        htmlUpdater(node, value) {
+            node.innerHTML = value;
+        },
+        textUpdater(node, value) {
+            node.textContent = value;
+        }
     }
-    // ...省略
-};
+}
+
 ```
 这里通过递归遍历保证了每个节点及子节点都会解析编译到，包括了{{}}表达式声明的文本节点。指令的声明规定是通过特定前缀的节点属性来标记，
 监听数据、绑定更新函数的处理是在`compileUtil.bind()`这个方法中，通过`new Watcher()`添加回调来接收数据变化的通知
-[完整代码](https://github.com/yaochenyang007/MVVM/js/mvvm.js)。接下来要看看Watcher这个订阅者的具体实现了
+[完整代码](https://github.com/yaochenyang007/MVVM/blob/master/js/mvvm.js)。接下来要看看Watcher这个订阅者的具体实现了
 
 ### 3、实现Watcher
 Watcher订阅者作为Observer和Compile之间通信的桥梁，主要做的事情是:
