@@ -423,3 +423,9 @@ class MVVM {
 本文主要围绕“实现Observer”、“实现Compile”、“实现Watcher”、“实现MVVM”，来实现MVVM原理
 
 [img1]: ./img/mvvm.gif
+
+
+
+## 特别感谢
+
+- [DMQ](https://github.com/DMQ)
