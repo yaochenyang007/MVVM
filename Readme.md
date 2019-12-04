@@ -55,9 +55,7 @@
 
 
 效果：
-![img1][img1]
-
-
+![MVVM](https://yaochenyang.xin/img/mvvm-b.gif "MVVM")
 ### 1、实现Observer
 
 我们知道可以利用`Obeject.defineProperty()`来监听属性变动
@@ -437,8 +435,6 @@ class MVVM {
 
 ### 总结
 本文主要围绕“实现Observer”、“实现Compile”、“实现Watcher”、“实现MVVM”，来实现MVVM原理
-
-[img1]: ./img/mvvm-b.gif
 
 
 
